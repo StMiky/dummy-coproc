@@ -32,7 +32,7 @@ module dummy_top #(
   input  dummy_pkg::coproc_ctl_t                  ctl_i,    // coprocessor mode control
   input  tag_t                                    tag_i,    // operation tag
   input  logic                   [DATA_WIDTH-1:0] rs1_i,    // first operand
-  input  logic                   [DATA_WIDTH-1:0] rs2_i,    // first operand
+  input  logic                   [DATA_WIDTH-1:0] rs2_i,    // second operand
 
   // Output intreface
   output logic                  valid_o,
@@ -133,8 +133,6 @@ module dummy_top #(
   assign iter_cnt_tc = iter_cnt_q == iter_thr_q;
 
   // Threshold register
-  // NOTE: yes, there is a subtractor below, but we're not playing doing
-  // serious stuff here, so we can live with it.
   assign iter_thr_d  = rs2_i[IterCntW-1:0];
   always_ff @(posedge clk_i or negedge rst_ni) begin : iter_thr_reg
     if (!rst_ni) iter_thr_q <= 0;
