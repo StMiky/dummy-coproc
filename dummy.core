@@ -1,0 +1,138 @@
+CAPI=2:
+# Copyright 2024 Politecnico di Torino
+# Solderpad Hardware License, Version 2.1, see LICENSE.md for details.
+# SPDX-License-Identifier: Apache-2.0 WITH SHL-2.1
+#
+# File: dummy.core
+# Author: Michele Caon
+# Description: Dummy coprocessor to test latency
+
+name: "polito:len5:dummy-coproc:0.1.0"
+description: Dummy coprocessor to test latency
+
+filesets:
+  rtl:
+    files:
+    - rtl/packages/dummy_pkg.sv
+    - rtl/dummy_top.sv
+    - rtl/dummy_cu.sv
+    file_type: systemVerilogSource
+
+  tb-verilator:
+    files:
+    - tb/tb_top.cpp
+    - tb/tb_components.cpp
+    - tb/tb_components.hh: {is_include_file: yes}
+    file_type: cppSource
+
+scripts:
+  # Prepare output directory
+  prepare_dirs:
+    cmd:
+    - mkdir
+    - "-p"
+    - "../../sim-common"
+  
+  # Copy waveforms
+  copy_waves:
+    cmd:
+    - cp
+    - logs/waves.fst
+    - "../../sim-common"
+
+targets:
+  # Default target
+  default: &default
+    filesets:
+    - rtl
+    toplevel: dummy_top
+
+  # RTL simulation
+  sim:
+    # Include all default keys
+    <<: *default
+    description: RTL simulation with Verilator
+    default_tool: verilator
+    filesets_append:
+    - tool_verilator ? (tb-verilator)
+    toplevel: dummy_top
+    hooks:
+      pre_run:
+      - prepare_dirs
+      post_run:
+      - copy_waves
+    parameters:
+    - DATA_WIDTH
+    - MAX_LATENCY
+    - MAX_PIPE_DEPTH
+    tools:
+      verilator:
+        mode: cc
+        verilator_options:
+        - '--cc'
+        - '--assert'
+        - '--trace'
+        - '--trace-fst'
+        - '--trace-structs'
+        - '--trace-max-array 128'
+        - '--x-assign unique'
+        - '--x-initial unique'
+        - '--exe'
+        - 'tb_top.cpp'
+        - '-Wall'
+        - '-Wpedantic'
+
+  # Format HDL with Verible
+  format:
+    filesets:
+    - rtl
+    toplevel: datapath
+    description: Format source files using verible-verilog-format
+    default_tool: veribleformat
+    tools:
+      veribleformat:
+        verible_format_args:
+        - '--assignment_statement_alignment=align'
+        - '--case_items_alignment=align'
+        - '--formal_parameters_indentation=indent'
+        - '--named_parameter_alignment=align'
+        - '--named_parameter_indentation=indent'
+        - '--named_port_alignment=align'
+        - '--named_port_indentation=indent'
+        - '--port_declarations_alignment=align'
+        - '--port_declarations_indentation=indent'
+        - '--assignment_statement_alignment=align'
+        - '--module_net_variable_alignment=align'
+        - '--inplace'
+
+  # Static analysis with Verible
+  lint:
+    filesets:
+    - rtl
+    toplevel: datapath
+    description: Perform static analysis using Verible
+    default_tool: veriblelint
+    tools:
+      veriblelint:
+        ruleset: default
+        verible_lint_args:
+        - '--waiver_files=../../../rtl/misc/verible-lint.waiver'
+        rules:
+        - 'line-length=length:160'
+
+parameters:
+  DATA_WIDTH:
+    datatype: int
+    description: Operands data width (bits).
+    default: 32
+    paramtype: vlogparam
+  MAX_LATENCY:
+    datatype: int
+    description: Operands data width (bits).
+    default: 32
+    paramtype: vlogparam
+  MAX_PIPE_DEPTH:
+    datatype: int
+    description: Operands data width (bits).
+    default: 32
+    paramtype: vlogparam

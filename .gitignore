@@ -1,0 +1,8 @@
+# Build directory
+build/
+
+# Private directory
+private/
+
+# VS Code
+.vscode/
