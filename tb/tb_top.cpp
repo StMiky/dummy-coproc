@@ -81,8 +81,8 @@ int main(int argc, char const *argv[])
 
         if (dut->clk_i == 1 && cntx->time() > END_OF_RESET_TIME)
         {
-            // Generate and print transaction
-            req = genReqTx(MODE_PIPE, 10);
+            // Generate transaction
+            req = genReqTx(rand() & 0x1, 3);
 
             // Pass transaction to driver
             drv->drive(req);
@@ -90,7 +90,7 @@ int main(int argc, char const *argv[])
             // Evaluate the DUT
             dut->eval();
 
-            // Monitor and print the response
+            // Monitor the response
             mon->monitor(resp);
             req_accepted = mon->accepted();
         }
@@ -134,15 +134,12 @@ void rstGen(Vdummy_top* dut, VerilatedContext* cntx)
 
 ReqTx *genReqTx(vluint8_t mode, vluint32_t rs2)
 {
-    // Generate transaction with 70% probability
-    if (rand() % 100 > 70) return NULL;
-
     ReqTx *req = new ReqTx;
     req->flush = 0;
-    req->valid = 1;
-    req->ready = (rand() % 100 > 20); // most times ready to accept result
+    req->valid = rand() % 100 > 80;
+    req->ready = rand() % 100 > 0; // most times ready to accept result
     req->ctl = mode;
-    req->tag = 0;
+    req->tag = vl_rand64() & 0x01; // randomize tag
     req->rs1 = vl_rand64() & 0xFFFFFFFF; // randomize first operand
     req->rs2 = rs2;
 

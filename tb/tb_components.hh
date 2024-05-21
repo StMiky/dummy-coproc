@@ -21,8 +21,8 @@
 
 // Coprocessor mode
 enum mode_e {
-    MODE_PIPE,
-    MODE_ITER
+    MODE_ITER,
+    MODE_PIPE
 };
 
 // Request transaction

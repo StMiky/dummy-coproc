@@ -72,29 +72,30 @@ module dummy_top #(
   logic [    DATA_WIDTH-1:0] pipe_data;
   tag_t                      pipe_tag;
   logic [MAX_PIPE_DEPTH-1:0] pipe_busy_mask;
+  logic [MAX_PIPE_DEPTH-1:0] pipe_active;
   logic                      pipe_busy;
 
   // -------------
   // SCONTROL UNIT
   // -------------
   dummy_cu u_dummy_cu (
-    .clk_i        (clk_i),
-    .rst_ni       (rst_ni),
-    .flush_i      (flush_i),
-    .valid_i      (valid_i),
-    .ready_o      (ready_o),
-    .ctl_i        (ctl_i),
-    .valid_o      (valid_o),
-    .ready_i      (ready_i),
-    .comb_mode_i  (comb_mode),
-    .iter_tc_i    (iter_cnt_tc),
-    .pipe_busy_i  (pipe_busy),
-    .pipe_valid_i (pipe_valid),
-    .iter_reg_en_o(iter_reg_en),
-    .iter_cnt_en_o(iter_cnt_en),
+    .clk_i         (clk_i),
+    .rst_ni        (rst_ni),
+    .flush_i       (flush_i),
+    .valid_i       (valid_i),
+    .ready_o       (ready_o),
+    .ctl_i         (ctl_i),
+    .valid_o       (valid_o),
+    .ready_i       (ready_i),
+    .comb_mode_i   (comb_mode),
+    .iter_tc_i     (iter_cnt_tc),
+    .pipe_busy_i   (pipe_busy),
+    .pipe_valid_i  (pipe_valid),
+    .iter_reg_en_o (iter_reg_en),
+    .iter_cnt_en_o (iter_cnt_en),
     .iter_cnt_clr_o(iter_cnt_clr),
-    .pipe_en_o    (pipe_en),
-    .res_sel_o    (res_sel)
+    .pipe_en_o     (pipe_en),
+    .res_sel_o     (res_sel)
   );
 
   // Status signals
@@ -104,7 +105,7 @@ module dummy_top #(
   // RESULT
   // ------
   // Waste power
-  assign res_d     = rs1_i + rs2_i;
+  assign res_d     = rs1_i;
 
   // ------------------
   // ITERATIVE DATAPATH
@@ -187,7 +188,8 @@ module dummy_top #(
       assign pipe_valid_a[i] = pipe_valid_q[i+1];
     end
   endgenerate
-  assign pipe_busy = |(pipe_busy_mask & pipe_valid_a[MAX_PIPE_DEPTH-1:0]);
+  assign pipe_active = (pipe_busy_mask >> 1) & pipe_valid_a[MAX_PIPE_DEPTH-1:0];
+  assign pipe_busy   = |pipe_active;
 
   // -------------------
   // RESULT MULTIPLEXING

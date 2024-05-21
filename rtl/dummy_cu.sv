@@ -26,15 +26,15 @@ module dummy_cu (
   input  logic                   ready_i,
 
   // Datapath interface
-  input  logic                comb_mode_i,    // combinational mode
-  input  logic                iter_tc_i,      // iteration terminal count
-  input  logic                pipe_busy_i,    // pipeline busy
-  input  logic                pipe_valid_i,   // valid from pipeline
-  output logic                iter_reg_en_o,  // iterative unit register enable
-  output logic                iter_cnt_en_o,  // iterative unit counter enable
-  output logic                iter_cnt_clr_o, // iterative unit counter clear
-  output logic                pipe_en_o,      // pipeline enable
-  output dummy_pkg::res_sel_t res_sel_o       // result selection
+  input  logic                comb_mode_i,     // combinational mode
+  input  logic                iter_tc_i,       // iteration terminal count
+  input  logic                pipe_busy_i,     // pipeline busy
+  input  logic                pipe_valid_i,    // valid from pipeline
+  output logic                iter_reg_en_o,   // iterative unit register enable
+  output logic                iter_cnt_en_o,   // iterative unit counter enable
+  output logic                iter_cnt_clr_o,  // iterative unit counter clear
+  output logic                pipe_en_o,       // pipeline enable
+  output dummy_pkg::res_sel_t res_sel_o        // result selection
 );
   import dummy_pkg::*;
 
@@ -74,7 +74,7 @@ module dummy_cu (
       end
       IDLE_PIPE: begin
         // Exit pipeline mode if the pipeline is empty
-        if (!pipe_busy_i && !pipe_valid_i) next_state = IDLE;
+        if (!pipe_busy_i && !(ctl_i == MODE_PIPE && valid_i)) next_state = IDLE;
         else next_state = IDLE_PIPE;
       end
       WAIT_ITER: begin
@@ -96,13 +96,13 @@ module dummy_cu (
   // Output network (Mealy)
   always_comb begin : fsm_out_net
     // Default values
-    valid_o       = 1'b0;
-    ready_o       = 1'b0;
-    iter_reg_en_o = 1'b0;
-    iter_cnt_en_o = 1'b0;
+    valid_o        = 1'b0;
+    ready_o        = 1'b0;
+    iter_reg_en_o  = 1'b0;
+    iter_cnt_en_o  = 1'b0;
     iter_cnt_clr_o = 1'b0;
-    pipe_en_o     = 1'b0;
-    res_sel_o     = RES_SEL_COMB;
+    pipe_en_o      = 1'b0;
+    res_sel_o      = RES_SEL_COMB;
 
     unique case (curr_state)
       IDLE: begin
@@ -135,11 +135,11 @@ module dummy_cu (
         endcase
       end
       WAIT_ITER: begin
-        valid_o       = iter_tc_i;
-        ready_o       = 1'b0;
-        iter_cnt_en_o = 1'b1;
+        valid_o        = iter_tc_i;
+        ready_o        = 1'b0;
+        iter_cnt_en_o  = 1'b1;
         iter_cnt_clr_o = iter_tc_i & ready_i;
-        res_sel_o     = RES_SEL_ITER;
+        res_sel_o      = RES_SEL_ITER;
       end
       WAIT_CORE: begin
         valid_o        = 1'b1;
