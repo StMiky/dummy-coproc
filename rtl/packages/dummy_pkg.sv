@@ -16,8 +16,8 @@
 package dummy_pkg;
   // Coprocessor mode control
   typedef enum logic {
-    MODE_ITER,
-    MODE_PIPE
+    MODE_PIPE,
+    MODE_ITER
   } coproc_ctl_t;
 
   // Result selection
